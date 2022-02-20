@@ -4,6 +4,13 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use Exception;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Psr\Http\Message\ResponseInterface;
+use Illuminate\Database\QueryException;
+use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class Handler extends ExceptionHandler
 {
@@ -38,4 +45,58 @@ class Handler extends ExceptionHandler
             // dd($e);
         });
     }
+
+    public function handleException($request, Exception $exception){
+        if ($exception instanceof NotFoundHttpException) {
+            return response()->json([
+                'status' => false,
+                'errors' => 'Data Not Found'
+            ], Response::HTTP_NOT_FOUND);
+        }
+        if ($exception instanceof QueryException) {
+            return response()->json([
+                'status' => false,
+                'errors' => 'Qurey Error'
+            ], Response::HTTP_NOT_FOUND);
+        }
+        if ($exception instanceof AuthenticationException) {
+            return response()->json([
+                'status' => false,
+                'errors' => 'Invalid Token'
+            ], Response::HTTP_NOT_FOUND);
+        }
+        if ($request->wantsJson()) {
+            if ($exception instanceof NotFoundHttpException) {
+                return response()->json([
+                    'status' => false,
+                    'errors' => 'Data Not Found'
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            if ($exception instanceof AuthenticationException) {
+                return response()->json([
+                    'status' => false,
+                    'errors' => 'Invalid Token'
+                ], Response::HTTP_NOT_FOUND);
+            }
+            if ($exception instanceof QueryException) {
+                return response()->json([
+                    'status' => false,
+                    'errors' => 'Qurey Error'
+                ], Response::HTTP_NOT_FOUND);
+            }
+        }
+        if ($exception instanceof ModelNotFoundException) {
+            return response()->json([
+                'status' => false,
+                'error' => 'Data not found.'
+            ]);
+        }
+    }
+
+    // public function register() { 
+    //     $this->renderable(function (NotFoundHttpException $e) { 
+    //         return response()->json("your massage here"); 
+    //     }); 
+    // }
 }
